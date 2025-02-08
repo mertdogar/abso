@@ -3,7 +3,7 @@
 </p>
 
 <p align=center>
-Super-charged **OpenAI-compatible** LLM framework.
+Super-charged <b>OpenAI-compatible</b> LLM framework.
 </p>
 
 **Abso** makes calling various LLMs—**simple, typed, and extensible**. It provides a unified interface while maintaining full type safety and streaming capabilities.
