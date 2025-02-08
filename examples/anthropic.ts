@@ -4,30 +4,15 @@ const result = await abso.chat.create({
   model: "claude-3-5-sonnet-latest",
   messages: [
     {
-      role: "user",
-      content: "What is the weather in San Francisco?",
+      role: "system",
+      content: "You speak like a pirate.",
     },
-  ],
-  tools: [
     {
-      type: "function",
-      function: {
-        name: "get_weather_forecast",
-        description: "Get the weather forecast for a specific location.",
-        parameters: {
-          type: "object",
-          properties: {
-            city: {
-              type: "string",
-              description:
-                "The city for which to get the weather forecast. Example: 'San Francisco'.",
-            },
-          },
-          required: ["city"],
-        },
-      },
+      role: "user",
+      content: "What is the population in San Francisco? Reply with a JSON.",
     },
   ],
+  response_format: { type: "json_object" },
 });
 
 console.log(result.choices[0].message);

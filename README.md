@@ -1,10 +1,8 @@
-# abso
+<img src="https://i.ibb.co/d4wWFcr4/vincelwt-Banner-for-an-SDK-library-called-Abso-Large-centered-4be96c63-74cc-46f9-b216-8de378cf9a2a.png" alt="vincelwt-Banner-for-an-SDK-library-called-Abso-Large-centered-4be96c63-74cc-46f9-b216-8de378cf9a2a" border="0">
 
-TypeScript framework for LLMs.
+A TypeScript framework that unifies LLM calls under an OpenAI-compatible interface.
 
-**Abso** is a TypeScript library that **unifies calls** under an OpenAI-compatible style interface.
-
-It aims to make calling various Large Language Models—OpenAI, Anthropic, Bedrock, Azure, and more—**simple, typed, and extensible**.
+**Abso** makes calling various Large Language Models—OpenAI, Anthropic, Bedrock, Azure, and more—**simple, typed, and extensible**. It provides a unified interface while maintaining full type safety and streaming capabilities.
 
 ## Features
 
