@@ -8,16 +8,29 @@ It aims to make calling various Large Language Models—OpenAI, Anthropic, Bedro
 
 ## Features
 
-- **OpenAI-compatible API** across multiple LLM providers
-- **TypeScript-first**: strongly typed methods, requests, and responses
-- **Streaming support** via both events and async iteration
-- **Easy extensibility**: add new providers with minimal fuss
+- 🔁 **OpenAI-compatible API** across multiple LLM providers
+- 🚀 **Lightweight & Fast**: no overhead
+- 🔍 **TypeScript-first**: strongly typed methods, requests, and responses
+- 📦 **Streaming support** via both events and async iteration
+- 🛠️ **Easy extensibility**: add new providers with minimal fuss
+- 🧮 **Embeddings support** for semantic search and text analysis
+- 🔢 **Tokenizer support** for accurate token counting and cost estimation
 
 ## Providers
 
-| Provider | Chat | Streaming | Tool Calling | Embeddings | Tokenizer | Cost Calculation |
-| -------- | ---- | --------- | ------------ | ---------- | --------- | ---------------- |
-| OpenAI   | ✅   | ✅        | ✅           | 🚧         | 🚧        | 🚧               |
+| Provider   | Chat | Streaming | Tool Calling | Embeddings | Tokenizer | Cost Calculation |
+| ---------- | ---- | --------- | ------------ | ---------- | --------- | ---------------- |
+| OpenAI     | ✅   | ✅        | ✅           | ✅         | 🚧        | 🚧               |
+| Anthropic  | ✅   | ✅        | ✅           | ❌         | 🚧        | 🚧               |
+| xAI Grok   | ✅   | ✅        | ✅           | ❌         | 🚧        | 🚧               |
+| Mistral    | ✅   | ✅        | ✅           | ❌         | 🚧        | 🚧               |
+| Groq       | ✅   | ✅        | ✅           | ❌         | ❌        | 🚧               |
+| Ollama     | ✅   | ✅        | ✅           | ❌         | ❌        | 🚧               |
+| OpenRouter | ✅   | ✅        | ✅           | ❌         | ❌        | 🚧               |
+| Voyage     | ❌   | ❌        | ❌           | ✅         | ❌        | ❌               |
+| Azure      | 🚧   | 🚧        | 🚧           | 🚧         | ❌        | 🚧               |
+| Bedrock    | 🚧   | 🚧        | 🚧           | 🚧         | ❌        | 🚧               |
+| Gemini     | 🚧   | 🚧        | 🚧           | 🚧         | 🚧        | 🚧               |
 
 ## Installation
 
@@ -51,35 +64,37 @@ for await (const chunk of stream) {
 }
 ```
 
-## Tokenizers
+## Tokenizers (soon)
 
 ```ts
-const tokenizer = await abso.tokenize({
+const tokens = await abso.tokenize({
   messages: [{ role: "user", content: "Hello, world!" }],
   model: "gpt-4o",
 });
 
-console.log(tokenizer.tokens);
+console.log(`${tokens.count} tokens`);
 ```
-
-## Roadmap
-
-- [ ] More providers
-- [ ] Embeddings support
-- [ ] Tokenizer logic
-- [ ] Cost calculation
 
 ## Custom Providers
 
 ```ts
 import { Abso } from "abso";
-import { MyCoolProvider } from "./myCoolProvider";
+import { MyCustomProvider } from "./myCustomProvider";
 
 const abso = new Abso([]);
-abso.registerProvider(new MyCoolProvider(/* config */));
+abso.registerProvider(new MyCustomProvider(/* config */));
 
 const result = await abso.chat.create({
-  model: "my-cool-model",
+  model: "my-custom-model",
   messages: [{ role: "user", content: "Hello!" }],
 });
 ```
+
+## Roadmap
+
+- [ ] More providers
+- [ ] Built in caching
+- [ ] Embeddings support
+- [ ] Tokenizer logic
+- [ ] Cost calculation
+- [ ] Out of the box observability

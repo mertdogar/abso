@@ -1,20 +1,37 @@
+// src/index.ts
 import { Abso } from "./abso";
+import { GroqProvider } from "./providers/groq";
 import { OpenAIProvider } from "./providers/openai";
-import { IProvider } from "./types";
+import { OpenRouterProvider } from "./providers/openrouter";
+import { AnthropicProvider } from "./providers/anthropic";
+import type { IProvider } from "./types";
+import { MistralProvider } from "./providers/mistral";
+import { XaiProvider } from "./providers/xai";
+import { OllamaProvider } from "./providers/ollama";
+import { VoyageProvider } from "./providers/voyage";
 
-// You can construct a default instance of Abso here, pre-registered
-// with certain providers (like OpenAI). The user can also construct
-// their own instance if they want a custom set of providers.
+// Provider configuration map
+const providerConfigs = [
+  { key: "OPENAI_API_KEY", Provider: OpenAIProvider },
+  { key: "GROQ_API_KEY", Provider: GroqProvider },
+  { key: "ANTHROPIC_API_KEY", Provider: AnthropicProvider },
+  { key: "OPENROUTER_API_KEY", Provider: OpenRouterProvider },
+  { key: "MISTRAL_API_KEY", Provider: MistralProvider },
+  { key: "XAI_API_KEY", Provider: XaiProvider },
+  { key: "VOYAGE_API_KEY", Provider: VoyageProvider },
+] as const;
 
-const defaultProviders: IProvider[] = [
-  new OpenAIProvider({
-    apiKey: process.env.OPENAI_API_KEY || "",
-  }),
-];
+// Initialize providers based on available API keys
+const defaultProviders: IProvider[] = providerConfigs
+  .filter(({ key }) => process.env[key])
+  .map(({ key, Provider }) => new Provider({ apiKey: process.env[key]! }));
+
+// Add Ollama provider which doesn't need an API key
+defaultProviders.push(new OllamaProvider({}));
 
 export const abso = new Abso(defaultProviders);
 
-// Re-export any useful types and classes
+// Re-export all classes/types for advanced usage
 export * from "./abso";
 export * from "./types";
 export * from "./providers/openai";

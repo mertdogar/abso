@@ -1,77 +1,137 @@
-/**
- * A single message in a conversation.
- */
-export interface Message {
-  role: "system" | "user" | "assistant" | "function";
-  content: string;
-  name?: string;
-}
+// src/types.ts
 
-/**
- * The request object for creating or streaming a chat completion.
- */
-export interface ChatCompletionRequest {
-  model: string;
-  messages: Message[];
-  stream?: boolean; // if you want streaming or not
-  provider?: string; // optional provider override
-  temperature?: number; // typical param
-  // ... any other LLM-specific parameters ...
-}
+import { EventEmitter } from "events";
+import type { ChatCompletionSnapshot } from "openai/lib/ChatCompletionStream";
 
-/**
- * A final chat completion response, akin to OpenAI's.
- */
-export interface ChatCompletion {
-  id: string;
-  model: string;
-  created: number;
-  choices: Array<{
-    index: number;
-    message: Message;
-    finish_reason: string;
-  }>;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
+import type {
+  ChatCompletionCreateParams as OriginalChatCompletionCreateParams,
+  ChatCompletion,
+  ChatCompletionChunk,
+  ChatCompletionMessage,
+} from "openai/resources/chat/completions";
 
-/**
- * The streaming interface for partial responses.
- * Instead of returning raw SSE data, we define a streamlined approach:
- * - You can consume it via events (.on('content', (delta) => ...))
- * - Or via an async iterator (for await ... of stream)
- * - finalChatCompletion() is used to get the full final ChatCompletion
- */
-export interface ChatCompletionStream extends AsyncIterable<string> {
+import type { CompletionUsage } from "openai/resources/completions";
+import type { APIUserAbortError } from "openai";
+
+import type {
+  EmbeddingCreateParams as OriginalEmbeddingCreateParams,
+  CreateEmbeddingResponse,
+} from "openai/resources/embeddings";
+
+// Create our extended version of ChatCompletionCreateParams
+type ChatCompletionCreateParams = OriginalChatCompletionCreateParams & {
+  provider?: string;
+};
+
+type EmbeddingCreateParams = OriginalEmbeddingCreateParams & {
+  provider?: string;
+};
+
+// Update exports to use our extended type
+
+export type {
+  ChatCompletion,
+  ChatCompletionChunk,
+  ChatCompletionMessage,
+  CompletionUsage,
+  CreateEmbeddingResponse,
+  EmbeddingCreateParams,
+  ChatCompletionCreateParams,
+};
+
+// Our own minimal version of ChatCompletionStreamingRunner
+export interface ChatCompletionStream
+  extends EventEmitter,
+    AsyncIterable<ChatCompletionChunk> {
+  on(event: "connect", listener: () => void): this;
   on(
     event: "content",
     listener: (delta: string, snapshot: string) => void
   ): this;
   on(event: "error", listener: (error: Error) => void): this;
+  on(
+    event: "chunk",
+    listener: (
+      chunk: ChatCompletionChunk,
+      snapshot: ChatCompletionSnapshot
+    ) => void
+  ): this;
   on(event: "end", listener: (final: ChatCompletion) => void): this;
+  on(event: "abort", listener: (error: APIUserAbortError) => void): this;
+  on(
+    event: "content.delta",
+    listener: (props: {
+      delta: string;
+      snapshot: string;
+      parsed?: unknown;
+    }) => void
+  ): this;
+  on(
+    event: "content.done",
+    listener: <T>(props: { content: string; parsed?: T }) => void
+  ): this;
+  on(
+    event: "finalChatCompletion",
+    listener: (completion: ChatCompletion) => void
+  ): this;
+  on(event: "finalContent", listener: (contentSnapshot: string) => void): this;
+  on(
+    event: "finalMessage",
+    listener: (message: ChatCompletionMessage) => void
+  ): this;
 
-  finalChatCompletion(): Promise<ChatCompletion>;
+  messages: ChatCompletion[];
+  controller: AbortController;
+
+  totalUsage: () => Promise<CompletionUsage>;
+  finalChatCompletion: () => Promise<ChatCompletion>;
+  finalContent: () => Promise<string>;
+  finalMessage: () => Promise<ChatCompletionMessage>;
+  done: () => Promise<void>;
+  abort: () => void;
+
+  [Symbol.asyncIterator](): AsyncIterator<ChatCompletionChunk>;
+}
+
+// Minimal interface for a provider-specific chat completion stream
+export interface ProviderChatCompletionStream extends EventEmitter {
+  on(event: "connect", listener: () => void): this;
+  on(event: "chunk", listener: (chunk: ChatCompletionChunk) => void): this;
+  on(event: "error", listener: (error: Error) => void): this;
+  on(event: "end", listener: () => void): this;
 }
 
 /**
- * Provider interface. Each provider must implement these methods
- * to handle how completions (both single-shot and streaming) are created.
+ * Our provider interface. Each provider maps from a ChatCompletionRequest
+ * to a ChatCompletion or ChatCompletionStream, but always in terms of
+ * "OpenAI-compatible" types.
  */
 export interface IProvider {
   name: string;
   matchesModel(model: string): boolean;
-  createCompletion(request: ChatCompletionRequest): Promise<ChatCompletion>;
 
   /**
-   * The provider can choose how to build the stream. We allow
-   * a "streamClass" argument so the provider can instantiate
-   * a library-supplied or user-supplied class for streaming behavior.
+   * Sanitizes a request before it is sent to the provider.
    */
-  createCompletionStream(
-    request: ChatCompletionRequest,
-    streamClass: new () => ChatCompletionStream
-  ): Promise<ChatCompletionStream>;
+  sanitizeRequest?(
+    request: ChatCompletionCreateParams
+  ): ChatCompletionCreateParams;
+
+  createCompletion?(
+    request: ChatCompletionCreateParams
+  ): Promise<ChatCompletion>;
+
+  /**
+   * Takes a ChatCompletionRequest (potentially with `stream: true`) plus a
+   * streaming class. Returns an object that implements ChatCompletionStream.
+   */
+  createCompletionStream?(
+    request: ChatCompletionCreateParams
+  ): Promise<ProviderChatCompletionStream>;
+
+  embed?(request: EmbeddingCreateParams): Promise<CreateEmbeddingResponse>;
+
+  tokenize?(
+    request: ChatCompletionCreateParams
+  ): Promise<{ count: number; tokens: number[] }>;
 }

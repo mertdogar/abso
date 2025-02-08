@@ -1,4 +1,4 @@
-import { IProvider } from "../types";
+import type { IProvider } from "../types";
 
 /**
  * Simple helper to find the first provider that returns true for matchesModel.
