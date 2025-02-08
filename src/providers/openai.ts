@@ -6,9 +6,8 @@ import type {
   ChatCompletion,
   ProviderChatCompletionStream,
   EmbeddingCreateParams,
-  Embeddings,
 } from "../types";
-import { EventEmitter } from "events";
+
 import type { CreateEmbeddingResponse } from "openai/resources/embeddings.mjs";
 
 interface OpenAIProviderOptions {
@@ -70,35 +69,17 @@ export class OpenAIProvider implements IProvider {
   async createCompletionStream(
     request: ChatCompletionCreateParams
   ): Promise<ProviderChatCompletionStream> {
-    // Start the streaming request with the official library
     const stream = await this.client.chat.completions.create({
       ...request,
       stream: true,
     });
 
-    const absoStream = new EventEmitter();
-
-    // Set up abort handling
-    absoStream.on("abort", () => {
-      stream.controller.abort();
-    });
-
-    // Emit connect event when stream starts
-    absoStream.emit("connect");
-
-    try {
-      // Forward chunks to the Abso stream
-      for await (const chunk of stream) {
-        absoStream.emit("chunk", chunk);
-      }
-
-      absoStream.emit("end");
-    } catch (error) {
-      // Emit error event if something goes wrong
-      absoStream.emit("error", error);
-    }
-
-    return absoStream as ProviderChatCompletionStream;
+    return {
+      controller: stream.controller,
+      [Symbol.asyncIterator]() {
+        return stream[Symbol.asyncIterator]();
+      },
+    };
   }
 
   async embed(

@@ -43,26 +43,55 @@ export class AnthropicProvider implements IProvider {
     request: ChatCompletionCreateParams
   ): MessageCreateParamsNonStreaming {
     // Convert OpenAI messages format to Anthropic format
-    const messages = request.messages.map((msg) => ({
-      role: msg.role === "assistant" ? "assistant" : "user",
-      content: msg.content,
-    }));
+    const messages = request.messages.map((msg) => {
+      const role =
+        msg.role === "assistant" ? ("assistant" as const) : ("user" as const);
+      if (typeof msg.content === "string" || !msg.content) {
+        return {
+          role,
+          content: msg.content || "",
+        };
+      }
+      // For now, just convert array content to string
+      // TODO: Add proper support for image/array content
+      return {
+        role,
+        content: msg.content
+          .map((c) => (typeof c === "string" ? c : ""))
+          .join(""),
+      };
+    });
 
     // Convert OpenAI functions/tools to Anthropic tools format
     const tools =
-      request.functions?.map((fn) => ({
-        name: fn.name,
-        description: fn.description,
-        input_schema: { type: "object", ...fn.parameters },
-      })) ||
-      request.tools?.map((tool) => ({
-        name: tool.function.name,
-        description: tool.function.description,
-        input_schema: { type: "object", ...tool.function.parameters },
-      }));
+      request.functions
+        ?.filter((fn) => fn.parameters)
+        .map((fn) => ({
+          name: fn.name,
+          description: fn.description || "",
+          input_schema: {
+            type: "object" as const,
+            properties: fn.parameters!.properties || {},
+            required: fn.parameters!.required || [],
+          },
+        })) ||
+      request.tools
+        ?.filter((tool) => tool.function.parameters)
+        .map((tool) => ({
+          name: tool.function.name,
+          description: tool.function.description || "",
+          input_schema: {
+            type: "object" as const,
+            properties: tool.function.parameters!.properties || {},
+            required: tool.function.parameters!.required || [],
+          },
+        }));
 
     // Convert tool_choice to Anthropic format
-    let tool_choice;
+    let tool_choice:
+      | { type: "tool" | "auto"; name: string }
+      | { type: "auto" }
+      | undefined;
     if (request.function_call === "auto" || request.tool_choice === "auto") {
       tool_choice = { type: "auto" };
     } else if (request.function_call === "none") {
@@ -79,8 +108,8 @@ export class AnthropicProvider implements IProvider {
       tools,
       tool_choice,
       max_tokens: request.max_tokens ?? 8192,
-      temperature: request.temperature,
-      top_p: request.top_p,
+      temperature: request.temperature ?? undefined,
+      top_p: request.top_p ?? undefined,
     };
   }
 
@@ -90,7 +119,7 @@ export class AnthropicProvider implements IProvider {
       .filter((block): block is ToolUseBlock => block.type === "tool_use")
       .map((block) => ({
         id: block.id,
-        type: "function",
+        type: "function" as const,
         function: {
           name: block.name,
           arguments: JSON.stringify(block.input),
@@ -115,6 +144,8 @@ export class AnthropicProvider implements IProvider {
             role: "assistant",
             content: content || null,
             tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
+            // Add required refusal field
+            refusal: null,
           },
           logprobs: null,
           finish_reason:
@@ -150,80 +181,94 @@ export class AnthropicProvider implements IProvider {
       stream: true,
     });
 
-    const absoStream = new EventEmitter();
+    let chunkIndex = 0;
 
-    // Set up abort handling
-    absoStream.on("abort", () => {
-      stream.controller.abort();
-    });
+    return {
+      controller: stream.controller,
+      async *[Symbol.asyncIterator]() {
+        try {
+          for await (const chunk of stream) {
+            if (chunk.type === "message_start") continue;
 
-    // Emit connect event when stream starts
-    absoStream.emit("connect");
-
-    try {
-      // Process Anthropic stream events and convert to OpenAI format
-      for await (const chunk of stream) {
-        if (chunk.type === "message_start") {
-          continue;
-        }
-
-        if (
-          chunk.type === "content_block_delta" &&
-          chunk.delta.type === "text_delta"
-        ) {
-          absoStream.emit("chunk", {
-            id: chunk.index,
-            object: "chat.completion.chunk",
-            created: Date.now(),
-            model: request.model,
-            choices: [
-              {
-                index: 0,
-                delta: {
-                  content: chunk.delta.text,
-                },
-                finish_reason: null,
-              },
-            ],
-          });
-        }
-
-        if (
-          chunk.type === "content_block_delta" &&
-          chunk.delta.type === "input_json_delta"
-        ) {
-          absoStream.emit("chunk", {
-            id: chunk.index,
-            object: "chat.completion.chunk",
-            created: Date.now(),
-            model: request.model,
-            choices: [
-              {
-                index: 0,
-                delta: {
-                  tool_calls: [
-                    {
-                      index: chunk.index,
-                      id: `call_${chunk.index}`,
-                      type: "function",
-                      function: {
-                        arguments: chunk.delta.partial_json,
-                      },
+            if (
+              chunk.type === "content_block_delta" &&
+              chunk.delta.type === "text_delta"
+            ) {
+              yield {
+                id: `chunk-${chunkIndex++}`,
+                object: "chat.completion.chunk",
+                created: Math.floor(Date.now() / 1000),
+                model: request.model,
+                choices: [
+                  {
+                    index: 0,
+                    delta: {
+                      content: chunk.delta.text,
                     },
-                  ],
-                },
-                finish_reason: null,
-              },
-            ],
-          });
+                    logprobs: null,
+                    finish_reason:
+                      chunk.delta.text.trim() === "" ? "stop" : null,
+                  },
+                ],
+              };
+            }
+
+            if (
+              chunk.type === "content_block_delta" &&
+              chunk.delta.type === "input_json_delta"
+            ) {
+              yield {
+                id: `chunk-${chunkIndex++}`,
+                object: "chat.completion.chunk",
+                created: Math.floor(Date.now() / 1000),
+                model: request.model,
+                choices: [
+                  {
+                    index: 0,
+                    delta: {
+                      tool_calls: [
+                        {
+                          index: 0,
+                          id: `call_${chunkIndex}`,
+                          type: "function" as const,
+                          function: {
+                            arguments: chunk.delta.partial_json,
+                          },
+                        },
+                      ],
+                    },
+                    logprobs: null,
+                    finish_reason: null,
+                  },
+                ],
+              };
+            }
+
+            if (chunk.type === "message_delta" && chunk.delta.stop_reason) {
+              // Final chunk with stop reason
+              yield {
+                id: `chunk-${chunkIndex++}`,
+                object: "chat.completion.chunk",
+                created: Math.floor(Date.now() / 1000),
+                model: request.model,
+                choices: [
+                  {
+                    index: 0,
+                    delta: {},
+                    logprobs: null,
+                    finish_reason:
+                      chunk.delta.stop_reason === "tool_use"
+                        ? "tool_calls"
+                        : "stop",
+                  },
+                ],
+              };
+            }
+          }
+        } catch (error) {
+          throw error;
         }
-      }
-
-      absoStream.emit("end");
-    } catch (error) {
-      absoStream.emit("error", error);
-    }
-
-    return absoStream as ProviderChatCompletionStream;
+      },
+    };
   }
 }

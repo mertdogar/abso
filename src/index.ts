@@ -1,10 +1,12 @@
 // src/index.ts
+import type { IProvider } from "./types";
+
 import { Abso } from "./abso";
+
 import { GroqProvider } from "./providers/groq";
 import { OpenAIProvider } from "./providers/openai";
 import { OpenRouterProvider } from "./providers/openrouter";
 import { AnthropicProvider } from "./providers/anthropic";
-import type { IProvider } from "./types";
 import { MistralProvider } from "./providers/mistral";
 import { XaiProvider } from "./providers/xai";
 import { OllamaProvider } from "./providers/ollama";

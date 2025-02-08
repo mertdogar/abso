@@ -43,12 +43,26 @@ npm install abso
 ```ts
 import { abso } from "abso";
 
-const chatCompletion = await abso.chat.create({
+const result = await abso.chat.create({
   messages: [{ role: "user", content: "Say this is a test" }],
   model: "gpt-4o",
 });
 
-console.log(chatCompletion.choices[0].message.content);
+console.log(result.choices[0].message.content);
+```
+
+## Manually selecting a provider
+
+Abso tries to infer the best provider for a given model, but you can also manually select a provider.
+
+```ts
+const result = await abso.chat.create({
+  messages: [{ role: "user", content: "Say this is a test" }],
+  model: "openai/gpt-4o",
+  provider: "openrouter",
+});
+
+console.log(result.choices[0].message.content);
 ```
 
 ## Streaming
@@ -90,11 +104,29 @@ const result = await abso.chat.create({
 });
 ```
 
+## Observability
+
+Abso integrates seamlessly with [Lunary](https://lunary.ai) for powerful observability and monitoring capabilities. This allows you to:
+
+- Track usage and costs across all LLM providers
+- Monitor performance and latency
+- Debug failed requests
+- Analyze prompt engineering effectiveness
+- Get insights into token usage
+
+To get started:
+
+1. Create a free account at [Lunary](https://lunary.ai)
+2. Get your project's public key from the Lunary dashboard
+3. Add it to your environment:
+
+```bash
+LUNARY_PUBLIC_KEY=your_public_key
+```
+
 ## Roadmap
 
 - [ ] More providers
 - [ ] Built in caching
-- [ ] Embeddings support
 - [ ] Tokenizer logic
 - [ ] Cost calculation
-- [ ] Out of the box observability

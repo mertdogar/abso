@@ -41,64 +41,15 @@ export type {
 
 // Our own minimal version of ChatCompletionStreamingRunner
 export interface ChatCompletionStream
-  extends EventEmitter,
-    AsyncIterable<ChatCompletionChunk> {
-  on(event: "connect", listener: () => void): this;
-  on(
-    event: "content",
-    listener: (delta: string, snapshot: string) => void
-  ): this;
-  on(event: "error", listener: (error: Error) => void): this;
-  on(
-    event: "chunk",
-    listener: (
-      chunk: ChatCompletionChunk,
-      snapshot: ChatCompletionSnapshot
-    ) => void
-  ): this;
-  on(event: "end", listener: (final: ChatCompletion) => void): this;
-  on(event: "abort", listener: (error: APIUserAbortError) => void): this;
-  on(
-    event: "content.delta",
-    listener: (props: {
-      delta: string;
-      snapshot: string;
-      parsed?: unknown;
-    }) => void
-  ): this;
-  on(
-    event: "content.done",
-    listener: <T>(props: { content: string; parsed?: T }) => void
-  ): this;
-  on(
-    event: "finalChatCompletion",
-    listener: (completion: ChatCompletion) => void
-  ): this;
-  on(event: "finalContent", listener: (contentSnapshot: string) => void): this;
-  on(
-    event: "finalMessage",
-    listener: (message: ChatCompletionMessage) => void
-  ): this;
-
-  messages: ChatCompletion[];
+  extends AsyncIterable<ChatCompletionChunk> {
   controller: AbortController;
-
-  totalUsage: () => Promise<CompletionUsage>;
-  finalChatCompletion: () => Promise<ChatCompletion>;
-  finalContent: () => Promise<string>;
-  finalMessage: () => Promise<ChatCompletionMessage>;
-  done: () => Promise<void>;
   abort: () => void;
-
-  [Symbol.asyncIterator](): AsyncIterator<ChatCompletionChunk>;
 }
 
 // Minimal interface for a provider-specific chat completion stream
-export interface ProviderChatCompletionStream extends EventEmitter {
-  on(event: "connect", listener: () => void): this;
-  on(event: "chunk", listener: (chunk: ChatCompletionChunk) => void): this;
-  on(event: "error", listener: (error: Error) => void): this;
-  on(event: "end", listener: () => void): this;
+export interface ProviderChatCompletionStream
+  extends AsyncIterable<ChatCompletionChunk> {
+  controller: AbortController;
 }
 
 /**
