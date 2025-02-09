@@ -102,6 +102,22 @@ const result = await abso.chat.create({
 });
 ```
 
+## Ollama
+```ts
+import { abso } from "abso-ai";
+
+const result = await abso.chat.create({
+  messages: [{ role: "user", content: "Hi, what's up?" }],
+  model: "llama3.2",
+  provider: "ollama",
+});
+
+console.log(result.choices[0].message.content);
+```
+
+
+
+
 ## Contributing
 
 See our [Contributing Guide](CONTRIBUTING.md).
