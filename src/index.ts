@@ -11,6 +11,7 @@ import { MistralProvider } from "./providers/mistral";
 import { XaiProvider } from "./providers/xai";
 import { OllamaProvider } from "./providers/ollama";
 import { VoyageProvider } from "./providers/voyage";
+import { GeminiProvider } from "./providers/gemini";
 
 // Provider configuration map
 const providerConfigs = [
@@ -21,6 +22,7 @@ const providerConfigs = [
   { key: "MISTRAL_API_KEY", Provider: MistralProvider },
   { key: "XAI_API_KEY", Provider: XaiProvider },
   { key: "VOYAGE_API_KEY", Provider: VoyageProvider },
+  { key: "GEMINI_API_KEY", Provider: GeminiProvider },
 ] as const;
 
 // Initialize providers based on available API keys

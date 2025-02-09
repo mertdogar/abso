@@ -1,8 +1,12 @@
+<p align=center>
 <img src="https://i.ibb.co/d4wWFcr4/vincelwt-Banner-for-an-SDK-library-called-Abso-Large-centered-4be96c63-74cc-46f9-b216-8de378cf9a2a.png" alt="vincelwt-Banner-for-an-SDK-library-called-Abso-Large-centered-4be96c63-74cc-46f9-b216-8de378cf9a2a" border="0">
+</p>
 
+<p align=center>
 A TypeScript framework that unifies LLM calls under an OpenAI-compatible interface.
+</p>
 
-**Abso** makes calling various Large Language Models—OpenAI, Anthropic, Bedrock, Azure, and more—**simple, typed, and extensible**. It provides a unified interface while maintaining full type safety and streaming capabilities.
+**Abso** makes calling various LLMs—**simple, typed, and extensible**. It provides a unified interface while maintaining full type safety and streaming capabilities.
 
 ## Features
 
@@ -28,18 +32,18 @@ A TypeScript framework that unifies LLM calls under an OpenAI-compatible interfa
 | Voyage     | ❌   | ❌        | ❌           | ✅         | ❌        | ❌               |
 | Azure      | 🚧   | 🚧        | 🚧           | 🚧         | ❌        | 🚧               |
 | Bedrock    | 🚧   | 🚧        | 🚧           | 🚧         | ❌        | 🚧               |
-| Gemini     | 🚧   | 🚧        | 🚧           | 🚧         | 🚧        | 🚧               |
+| Gemini     | ✅   | ✅        | ✅           | ❌         | ❌        | ❌               |
 
 ## Installation
 
 ```bash
-npm install abso
+npm install abso-ai
 ```
 
 ## Usage
 
 ```ts
-import { abso } from "abso";
+import { abso } from "abso-ai";
 
 const result = await abso.chat.create({
   messages: [{ role: "user", content: "Say this is a test" }],
