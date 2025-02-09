@@ -36,6 +36,9 @@
     "tsup": "^8.3.6",
     "typescript": "^5.7.3"
   },
+  "prettier": {
+    "semi": false
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
     "@google/generative-ai": "^0.21.0",

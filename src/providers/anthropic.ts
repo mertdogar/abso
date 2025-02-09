@@ -1,29 +1,29 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Anthropic from "@anthropic-ai/sdk"
 import type {
   IProvider,
   ChatCompletionCreateParams,
   ChatCompletion,
   ProviderChatCompletionStream,
-} from "../types";
-import { EventEmitter } from "events";
+} from "../types"
+import { EventEmitter } from "events"
 import type {
   TextBlock,
   Message,
   MessageCreateParamsNonStreaming,
   ToolUseBlock,
-} from "@anthropic-ai/sdk/resources/messages/index.mjs";
+} from "@anthropic-ai/sdk/resources/messages/index.mjs"
 
 interface AnthropicProviderOptions {
-  apiKey?: string;
-  baseURL?: string;
-  maxRetries?: number;
-  defaultHeaders?: Record<string, string>;
-  defaultQuery?: Record<string, string>;
+  apiKey?: string
+  baseURL?: string
+  maxRetries?: number
+  defaultHeaders?: Record<string, string>
+  defaultQuery?: Record<string, string>
 }
 
 export class AnthropicProvider implements IProvider {
-  public name = "anthropic";
-  private client: Anthropic;
+  public name = "anthropic"
+  private client: Anthropic
 
   constructor(options: AnthropicProviderOptions) {
     this.client = new Anthropic({
@@ -32,11 +32,11 @@ export class AnthropicProvider implements IProvider {
       maxRetries: options.maxRetries,
       defaultHeaders: options.defaultHeaders,
       defaultQuery: options.defaultQuery,
-    });
+    })
   }
 
   matchesModel(model: string): boolean {
-    return model.startsWith("claude-");
+    return model.startsWith("claude-")
   }
 
   private convertOpenAIToAnthropic(
@@ -45,12 +45,12 @@ export class AnthropicProvider implements IProvider {
     // Convert OpenAI messages format to Anthropic format
     const messages = request.messages.map((msg) => {
       const role =
-        msg.role === "assistant" ? ("assistant" as const) : ("user" as const);
+        msg.role === "assistant" ? ("assistant" as const) : ("user" as const)
       if (typeof msg.content === "string" || !msg.content) {
         return {
           role,
           content: msg.content || "",
-        };
+        }
       }
       // For now, just convert array content to string
       // TODO: Add proper support for image/array content
@@ -59,8 +59,8 @@ export class AnthropicProvider implements IProvider {
         content: msg.content
           .map((c) => (typeof c === "string" ? c : ""))
           .join(""),
-      };
-    });
+      }
+    })
 
     // Convert OpenAI functions/tools to Anthropic tools format
     const tools =
@@ -85,21 +85,21 @@ export class AnthropicProvider implements IProvider {
             properties: tool.function.parameters!.properties || {},
             required: tool.function.parameters!.required || [],
           },
-        }));
+        }))
 
     // Convert tool_choice to Anthropic format
     let tool_choice:
       | { type: "tool" | "auto"; name: string }
       | { type: "auto" }
-      | undefined;
+      | undefined
     if (request.function_call === "auto" || request.tool_choice === "auto") {
-      tool_choice = { type: "auto" };
+      tool_choice = { type: "auto" }
     } else if (request.function_call === "none") {
-      tool_choice = undefined;
+      tool_choice = undefined
     } else if (typeof request.function_call === "object") {
-      tool_choice = { type: "tool", name: request.function_call.name };
+      tool_choice = { type: "tool", name: request.function_call.name }
     } else if (typeof request.tool_choice === "object") {
-      tool_choice = { type: "tool", name: request.tool_choice.function.name };
+      tool_choice = { type: "tool", name: request.tool_choice.function.name }
     }
 
     return {
@@ -110,7 +110,7 @@ export class AnthropicProvider implements IProvider {
       max_tokens: request.max_tokens ?? 8192,
       temperature: request.temperature ?? undefined,
       top_p: request.top_p ?? undefined,
-    };
+    }
   }
 
   private convertAnthropicToOpenAI(response: Message): ChatCompletion {
@@ -124,13 +124,13 @@ export class AnthropicProvider implements IProvider {
           name: block.name,
           arguments: JSON.stringify(block.input),
         },
-      }));
+      }))
 
     // Convert text content
     const content = response.content
       .filter((block): block is TextBlock => block.type === "text")
       .map((block) => block.text)
-      .join("");
+      .join("")
 
     return {
       id: response.id,
@@ -158,37 +158,37 @@ export class AnthropicProvider implements IProvider {
         total_tokens:
           response.usage.input_tokens + response.usage.output_tokens,
       },
-    };
+    }
   }
 
   async createCompletion(
     request: ChatCompletionCreateParams
   ): Promise<ChatCompletion> {
-    const anthropicRequest = this.convertOpenAIToAnthropic(request);
+    const anthropicRequest = this.convertOpenAIToAnthropic(request)
     const response = await this.client.messages.create({
       ...anthropicRequest,
       stream: false,
-    });
-    return this.convertAnthropicToOpenAI(response);
+    })
+    return this.convertAnthropicToOpenAI(response)
   }
 
   async createCompletionStream(
     request: ChatCompletionCreateParams
   ): Promise<ProviderChatCompletionStream> {
-    const anthropicRequest = this.convertOpenAIToAnthropic(request);
+    const anthropicRequest = this.convertOpenAIToAnthropic(request)
     const stream = await this.client.messages.create({
       ...anthropicRequest,
       stream: true,
-    });
+    })
 
-    let chunkIndex = 0;
+    let chunkIndex = 0
 
     return {
       controller: stream.controller,
       async *[Symbol.asyncIterator]() {
         try {
           for await (const chunk of stream) {
-            if (chunk.type === "message_start") continue;
+            if (chunk.type === "message_start") continue
 
             if (
               chunk.type === "content_block_delta" &&
@@ -210,7 +210,7 @@ export class AnthropicProvider implements IProvider {
                       chunk.delta.text.trim() === "" ? "stop" : null,
                   },
                 ],
-              };
+              }
             }
 
             if (
@@ -241,7 +241,7 @@ export class AnthropicProvider implements IProvider {
                     finish_reason: null,
                   },
                 ],
-              };
+              }
             }
 
             if (chunk.type === "message_delta" && chunk.delta.stop_reason) {
@@ -262,13 +262,13 @@ export class AnthropicProvider implements IProvider {
                         : "stop",
                   },
                 ],
-              };
+              }
             }
           }
         } catch (error) {
-          throw error;
+          throw error
         }
       },
-    };
+    }
   }
 }

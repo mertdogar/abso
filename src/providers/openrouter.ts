@@ -1,13 +1,13 @@
-import { OpenAIProvider } from "./openai";
-import type { IProvider } from "../types";
+import { OpenAIProvider } from "./openai"
+import type { IProvider } from "../types"
 
 interface OpenRouterProviderOptions {
-  apiKey?: string;
-  defaultHeaders?: Record<string, string>;
+  apiKey?: string
+  defaultHeaders?: Record<string, string>
 }
 
 export class OpenRouterProvider extends OpenAIProvider implements IProvider {
-  public name = "openrouter";
+  public name = "openrouter"
 
   constructor(options: OpenRouterProviderOptions) {
     super({
@@ -17,10 +17,10 @@ export class OpenRouterProvider extends OpenAIProvider implements IProvider {
         "HTTP-Referer": "abso.ai",
         "X-Title": "Abso",
       },
-    });
+    })
   }
 
   matchesModel(model: string): boolean {
-    return false;
+    return false
   }
 }

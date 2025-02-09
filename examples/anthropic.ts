@@ -1,4 +1,4 @@
-import { abso } from "../src";
+import { abso } from "../src"
 
 const result = await abso.chat.create({
   model: "claude-3-5-sonnet-latest",
@@ -13,9 +13,9 @@ const result = await abso.chat.create({
     },
   ],
   response_format: { type: "json_object" },
-});
+})
 
-console.log(result.choices[0].message);
+console.log(result.choices[0].message)
 
 // const stream = await abso.chat.stream({
 //   model: "gpt-4o",
