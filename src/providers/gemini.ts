@@ -6,6 +6,8 @@ import type {
   ChatCompletionChunk,
 } from "../types";
 
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 interface GeminiProviderOptions {
   apiKey?: string;
   baseURL?: string;
@@ -15,9 +17,22 @@ interface GeminiProviderOptions {
 export class GeminiProvider implements IProvider {
   public name = "gemini";
   private options: GeminiProviderOptions;
+  private apiKey: string;
+  private genAI: GoogleGenerativeAI;
 
   constructor(options: GeminiProviderOptions = {}) {
     this.options = options;
+    const apiKey = this.options.apiKey ?? process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "Gemini API key is required, define GEMINI_API_KEY in your environment or pass it in options"
+      );
+    }
+    this.apiKey = apiKey;
+    if (this.options.baseURL) {
+      console.warn("The 'baseURL' option is ignored by Gemini");
+    }
+    this.genAI = new GoogleGenerativeAI(this.apiKey);
   }
 
   matchesModel(model: string): boolean {
@@ -29,15 +44,6 @@ export class GeminiProvider implements IProvider {
   ): Promise<ChatCompletion> {
     // Force stream to false
     const req = { ...request, stream: false };
-    const apiKey = this.options.apiKey ?? process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        "Gemini API key is required, define GEMINI_API_KEY in your environment or pass it in options"
-      );
-    }
-    if (this.options.baseURL) {
-      console.warn("The 'baseURL' option is ignored by Gemini");
-    }
     const responseMimeType =
       request.response_format?.type === "json_object"
         ? "application/json"
@@ -45,8 +51,6 @@ export class GeminiProvider implements IProvider {
     const stopSequences =
       typeof request.stop === "string" ? [request.stop] : request.stop;
 
-    const { GoogleGenerativeAI } = await import("@google/generative-ai");
-    const genAI = new GoogleGenerativeAI(apiKey);
     const generationConfig = {
       maxOutputTokens: request.max_tokens ?? undefined,
       temperature: request.temperature ?? undefined,
@@ -55,7 +59,7 @@ export class GeminiProvider implements IProvider {
       candidateCount: request.n ?? undefined,
       responseMimeType,
     };
-    const modelInstance = genAI.getGenerativeModel({
+    const modelInstance = this.genAI.getGenerativeModel({
       model: request.model,
       generationConfig,
     });
@@ -80,15 +84,6 @@ export class GeminiProvider implements IProvider {
   ): Promise<ProviderChatCompletionStream> {
     // Force stream to true
     const req = { ...request, stream: true };
-    const apiKey = this.options.apiKey ?? process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        "Gemini API key is required, define GEMINI_API_KEY in your environment or pass it in options"
-      );
-    }
-    if (this.options.baseURL) {
-      console.warn("The 'baseURL' option is ignored by Gemini");
-    }
     const responseMimeType =
       request.response_format?.type === "json_object"
         ? "application/json"
@@ -96,8 +91,6 @@ export class GeminiProvider implements IProvider {
     const stopSequences =
       typeof request.stop === "string" ? [request.stop] : request.stop;
 
-    const { GoogleGenerativeAI } = await import("@google/generative-ai");
-    const genAI = new GoogleGenerativeAI(apiKey);
     const generationConfig = {
       maxOutputTokens: request.max_tokens ?? undefined,
       temperature: request.temperature ?? undefined,
@@ -106,7 +99,7 @@ export class GeminiProvider implements IProvider {
       candidateCount: request.n ?? undefined,
       responseMimeType,
     };
-    const modelInstance = genAI.getGenerativeModel({
+    const modelInstance = this.genAI.getGenerativeModel({
       model: request.model,
       generationConfig,
     });
@@ -201,6 +194,7 @@ function convertResponse(
   const message = {
     role: "assistant",
     content,
+    refusal: null,
     tool_calls: candidate.content?.parts
       ? candidate.content.parts
           .filter((part: any) => part.functionCall !== undefined)
