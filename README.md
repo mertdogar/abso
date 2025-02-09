@@ -1,9 +1,5 @@
 <p align=center>
-<img src="https://i.ibb.co/d4wWFcr4/vincelwt-Banner-for-an-SDK-library-called-Abso-Large-centered-4be96c63-74cc-46f9-b216-8de378cf9a2a.png" alt="vincelwt-Banner-for-an-SDK-library-called-Abso-Large-centered-4be96c63-74cc-46f9-b216-8de378cf9a2a" border="0">
-</p>
-
-<p align=center>
-A TypeScript framework that unifies LLM calls under an OpenAI-compatible interface.
+  <img src="https://github.com/user-attachments/assets/cfec6d10-7e1e-4412-bd4b-edb3df45fe99" alt="Abso banner" width=1040 />
 </p>
 
 **Abso** makes calling various LLMs—**simple, typed, and extensible**. It provides a unified interface while maintaining full type safety and streaming capabilities.
@@ -106,29 +102,13 @@ const result = await abso.chat.create({
 });
 ```
 
-## Observability
+## Contributing
 
-Abso integrates seamlessly with [Lunary](https://lunary.ai) for powerful observability and monitoring capabilities. This allows you to:
-
-- Track usage and costs across all LLM providers
-- Monitor performance and latency
-- Debug failed requests
-- Analyze prompt engineering effectiveness
-- Get insights into token usage
-
-To get started:
-
-1. Create a free account at [Lunary](https://lunary.ai)
-2. Get your project's public key from the Lunary dashboard
-3. Add it to your environment:
-
-```bash
-LUNARY_PUBLIC_KEY=your_public_key
-```
+See our [Contributing Guide](CONTRIBUTING.md).
 
 ## Roadmap
 
 - [ ] More providers
 - [ ] Built in caching
-- [ ] Tokenizer logic
+- [ ] Tokenizers
 - [ ] Cost calculation
