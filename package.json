@@ -1,6 +1,6 @@
 {
   "name": "abso-ai",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "module": "src/index.ts",
   "description": "Abso AI SDK. Call LLMs using a single API.",
   "type": "module",
@@ -42,6 +42,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
     "@google/generative-ai": "^0.21.0",
+    "abso-ai": "^0.0.4",
     "lunary": "^0.8.8",
     "openai": "^4.83.0"
   }
