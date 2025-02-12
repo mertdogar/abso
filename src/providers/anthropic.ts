@@ -201,13 +201,45 @@ export class AnthropicProvider implements IProvider {
                 model: request.model,
                 choices: [
                   {
-                    index: 0,
+                    index: chunk.index,
                     delta: {
                       content: chunk.delta.text,
                     },
                     logprobs: null,
                     finish_reason:
                       chunk.delta.text.trim() === "" ? "stop" : null,
+                  },
+                ],
+              }
+            }
+
+            if (
+              chunk.type == "content_block_start" &&
+              chunk.content_block.type == "tool_use"
+            ) {
+              yield {
+                id: `chunk-${chunkIndex++}`,
+                object: "chat.completion.chunk",
+                created: Math.floor(Date.now() / 1000),
+                model: request.model,
+                choices: [
+                  {
+                    index: chunk.index,
+                    delta: {
+                      tool_calls: [
+                        {
+                          index: 0,
+                          id: chunk.content_block.id,
+                          function: {
+                            arguments: "",
+                            name: chunk.content_block.name
+                          },
+                          type: "function"
+                        }
+                      ]
+                    },
+                    logprobs: null,
+                    finish_reason: null,
                   },
                 ],
               }
@@ -224,7 +256,7 @@ export class AnthropicProvider implements IProvider {
                 model: request.model,
                 choices: [
                   {
-                    index: 0,
+                    index: chunk.index,
                     delta: {
                       tool_calls: [
                         {
@@ -253,7 +285,7 @@ export class AnthropicProvider implements IProvider {
                 model: request.model,
                 choices: [
                   {
-                    index: 0,
+                    index: chunk.index,
                     delta: {},
                     logprobs: null,
                     finish_reason:
