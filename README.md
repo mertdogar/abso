@@ -6,9 +6,10 @@
 
 ## Features
 
-- **OpenAI-compatible API 🔁** across all LLM providers
-- **Lightweight & Fast ⚡**: no overhead
-- **Embeddings 🧮** for semantic search and text analysis
+- **OpenAI-compatible API 🔁**
+- **Lightweight & Fast ⚡**
+- **Embeddings support 🧮**
+- **Unified tool calling 🛠️**
 - **Tokenizer and cost calculation (soon) 🔢** for accurate token counting and cost estimation
 - **Smart routing (soon)** to the best model for your request
 
@@ -74,6 +75,17 @@ for await (const chunk of stream) {
 }
 ```
 
+## Embeddings
+
+```ts
+const embeddings = await abso.embed({
+  model: "text-embedding-3-small",
+  input: ["A cat was playing with a ball on the floor"],
+})
+
+console.log(embeddings.data[0].embedding)
+```
+
 ## Tokenizers (soon)
 
 ```ts
@@ -101,20 +113,18 @@ const result = await abso.chat.create({
 ```
 
 ## Ollama
+
 ```ts
-import { abso } from "abso-ai";
+import { abso } from "abso-ai"
 
 const result = await abso.chat.create({
   messages: [{ role: "user", content: "Hi, what's up?" }],
   model: "llama3.2",
   provider: "ollama",
-});
+})
 
-console.log(result.choices[0].message.content);
+console.log(result.choices[0].message.content)
 ```
-
-
-
 
 ## Contributing
 
