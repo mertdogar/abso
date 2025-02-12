@@ -2,17 +2,15 @@
   <img src="https://github.com/user-attachments/assets/cfec6d10-7e1e-4412-bd4b-edb3df45fe99" alt="Abso banner" width=1040 />
 </p>
 
-**Abso** makes calling various LLMs—**simple, typed, and extensible**. It provides a unified interface while maintaining full type safety and streaming capabilities.
+**Abso** provides a unified interface for calling various LLMs while maintaining full type safety.
 
 ## Features
 
-- 🔁 **OpenAI-compatible API** across multiple LLM providers
-- 🚀 **Lightweight & Fast**: no overhead
-- 🔍 **TypeScript-first**: strongly typed methods, requests, and responses
-- 📦 **Streaming support** via both events and async iteration
-- 🛠️ **Easy extensibility**: add new providers with minimal fuss
-- 🧮 **Embeddings support** for semantic search and text analysis
-- 🔢 **Tokenizer support** for accurate token counting and cost estimation
+- **OpenAI-compatible API 🔁** across all LLM providers
+- **Lightweight & Fast ⚡**: no overhead
+- **Embeddings 🧮** for semantic search and text analysis
+- **Tokenizer and cost calculation (soon) 🔢** for accurate token counting and cost estimation
+- **Smart routing (soon)** to the best model for your request
 
 ## Providers
 
@@ -39,14 +37,14 @@ npm install abso-ai
 ## Usage
 
 ```ts
-import { abso } from "abso-ai";
+import { abso } from "abso-ai"
 
 const result = await abso.chat.create({
   messages: [{ role: "user", content: "Say this is a test" }],
   model: "gpt-4o",
-});
+})
 
-console.log(result.choices[0].message.content);
+console.log(result.choices[0].message.content)
 ```
 
 ## Manually selecting a provider
@@ -58,9 +56,9 @@ const result = await abso.chat.create({
   messages: [{ role: "user", content: "Say this is a test" }],
   model: "openai/gpt-4o",
   provider: "openrouter",
-});
+})
 
-console.log(result.choices[0].message.content);
+console.log(result.choices[0].message.content)
 ```
 
 ## Streaming
@@ -69,10 +67,10 @@ console.log(result.choices[0].message.content);
 const stream = await abso.chat.stream({
   messages: [{ role: "user", content: "Say this is a test" }],
   model: "gpt-4o",
-});
+})
 
 for await (const chunk of stream) {
-  console.log(chunk);
+  console.log(chunk)
 }
 ```
 
@@ -82,24 +80,24 @@ for await (const chunk of stream) {
 const tokens = await abso.tokenize({
   messages: [{ role: "user", content: "Hello, world!" }],
   model: "gpt-4o",
-});
+})
 
-console.log(`${tokens.count} tokens`);
+console.log(`${tokens.count} tokens`)
 ```
 
 ## Custom Providers
 
 ```ts
-import { Abso } from "abso";
-import { MyCustomProvider } from "./myCustomProvider";
+import { Abso } from "abso"
+import { MyCustomProvider } from "./myCustomProvider"
 
-const abso = new Abso([]);
-abso.registerProvider(new MyCustomProvider(/* config */));
+const abso = new Abso([])
+abso.registerProvider(new MyCustomProvider(/* config */))
 
 const result = await abso.chat.create({
   model: "my-custom-model",
   messages: [{ role: "user", content: "Hello!" }],
-});
+})
 ```
 
 ## Contributing
@@ -112,3 +110,4 @@ See our [Contributing Guide](CONTRIBUTING.md).
 - [ ] Built in caching
 - [ ] Tokenizers
 - [ ] Cost calculation
+- [ ] Smart routing
