@@ -1,6 +1,14 @@
-<p align=center>
+<div align="center">
+
+<p align="center">
   <img src="https://github.com/user-attachments/assets/cfec6d10-7e1e-4412-bd4b-edb3df45fe99" alt="Abso banner" width=1040 />
 </p>
+
+**TypeScript LLM client**
+
+[![npm version](https://badge.fury.io/js/abso-ai.svg)](https://badge.fury.io/js/abso-ai) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/abso-ai/abso) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/abso-ai/abso)
+
+</div>
 
 **Abso** provides a unified interface for calling various LLMs while maintaining full type safety.
 
