@@ -5,7 +5,6 @@ import type {
   ChatCompletion,
   ProviderChatCompletionStream,
 } from "../types"
-import { EventEmitter } from "events"
 import type {
   TextBlock,
   Message,
@@ -232,11 +231,11 @@ export class AnthropicProvider implements IProvider {
                           id: chunk.content_block.id,
                           function: {
                             arguments: "",
-                            name: chunk.content_block.name
+                            name: chunk.content_block.name,
                           },
-                          type: "function"
-                        }
-                      ]
+                          type: "function",
+                        },
+                      ],
                     },
                     logprobs: null,
                     finish_reason: null,

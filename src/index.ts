@@ -13,6 +13,8 @@ import { OllamaProvider } from "./providers/ollama"
 import { VoyageProvider } from "./providers/voyage"
 import { GeminiProvider } from "./providers/gemini"
 
+import { LunaryCallback } from "./callbacks/lunary"
+
 // Provider configuration map
 const providerConfigs = [
   { key: "OPENAI_API_KEY", Provider: OpenAIProvider },
@@ -33,9 +35,11 @@ const defaultProviders: IProvider[] = providerConfigs
 // Add Ollama provider which doesn't need an API key
 defaultProviders.push(new OllamaProvider({}))
 
-export const abso = new Abso(defaultProviders)
+export const abso = new Abso({
+  providers: defaultProviders,
+  callbacks: process.env.LUNARY_PUBLIC_KEY ? [new LunaryCallback()] : undefined,
+})
 
-// Re-export all classes/types for advanced usage
 export * from "./abso"
 export * from "./types"
 export * from "./providers/openai"

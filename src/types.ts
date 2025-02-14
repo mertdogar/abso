@@ -15,6 +15,9 @@ import type {
 // Create our extended version of ChatCompletionCreateParams
 type ChatCompletionCreateParams = OriginalChatCompletionCreateParams & {
   provider?: string
+  tags?: string[]
+  userId?: string
+  userProps?: Record<string, any>
 }
 
 type EmbeddingCreateParams = OriginalEmbeddingCreateParams & {
@@ -38,6 +41,7 @@ export interface ChatCompletionStream
   extends AsyncIterable<ChatCompletionChunk> {
   controller: AbortController
   abort: () => void
+  finalChatCompletion: () => Promise<ChatCompletion>
 }
 
 // Minimal interface for a provider-specific chat completion stream
@@ -79,4 +83,15 @@ export interface IProvider {
   tokenize?(
     request: ChatCompletionCreateParams
   ): Promise<{ count: number; tokens: number[] }>
+}
+
+export interface AbsoCallback {
+  onChatStart(id: string, request: ChatCompletionCreateParams): void
+  onChatEnd(id: string, result: ChatCompletion | string): void
+  onChatError(id: string, error: Error): void
+}
+
+export interface AbsoOptions {
+  providers: IProvider[]
+  callbacks?: AbsoCallback[]
 }
