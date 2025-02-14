@@ -12,7 +12,7 @@ for await (const chunk of stream) {
 
 const fullResult = await stream.finalChatCompletion()
 
-console.log(fullResult.choices[0].message)
+console.log(fullResult)
 
 // const embeddings = await abso.embed({
 //   model: "text-embedding-3-small",

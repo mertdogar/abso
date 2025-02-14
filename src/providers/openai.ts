@@ -72,6 +72,7 @@ export class OpenAIProvider implements IProvider {
     const stream = await this.client.chat.completions.create({
       ...request,
       stream: true,
+      stream_options: { include_usage: true },
     })
 
     return {

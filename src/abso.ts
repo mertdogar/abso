@@ -6,6 +6,7 @@ import type {
   EmbeddingCreateParams,
   AbsoCallback,
   AbsoOptions,
+  CompletionUsage,
 } from "./types"
 import { findMatchingProvider } from "./utils/modelRouting"
 import type { IProvider } from "./types"
@@ -207,15 +208,30 @@ export class Abso {
     async function* streamingAggregatingIterator() {
       let tokens = 0
       let choices: any[] = []
+      let finalUsage: CompletionUsage | undefined
       try {
         while (true) {
           const { value, done } = await asyncIterator.next()
           if (done) break
+
+          // Handle usage information if present
+          if ("usage" in value && value.usage) {
+            finalUsage = value.usage as CompletionUsage
+          }
+
+          // Skip if no choices (might be a usage-only chunk)
+          if (!value.choices?.length) {
+            continue
+          }
+
           // Each chunk is assumed to have a 'choices' array; we take the first element
           tokens += 1
           const chunk = value.choices[0]
-          const { index, delta } = chunk
-          const { content, role, tool_calls } = delta
+          if (!chunk.delta) continue
+
+          const { index = 0 } = chunk
+          const { content, role, tool_calls } = chunk.delta
+
           if (!choices[index]) {
             choices.splice(index, 0, {
               message: {
@@ -265,7 +281,7 @@ export class Abso {
           created: Math.floor(Date.now() / 1000),
           model: request.model,
           choices,
-          usage: {
+          usage: finalUsage || {
             completion_tokens: tokens,
             prompt_tokens: 0,
             total_tokens: tokens,
