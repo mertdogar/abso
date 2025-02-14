@@ -12,6 +12,7 @@ import { XaiProvider } from "./providers/xai"
 import { OllamaProvider } from "./providers/ollama"
 import { VoyageProvider } from "./providers/voyage"
 import { GeminiProvider } from "./providers/gemini"
+import { DeepSeekProvider } from "./providers/deepseek"
 
 import { LunaryCallback } from "./callbacks/lunary"
 
@@ -25,6 +26,7 @@ const providerConfigs = [
   { key: "XAI_API_KEY", Provider: XaiProvider },
   { key: "VOYAGE_API_KEY", Provider: VoyageProvider },
   { key: "GEMINI_API_KEY", Provider: GeminiProvider },
+  { key: "DEEPSEEK_API_KEY", Provider: DeepSeekProvider },
 ] as const
 
 // Initialize providers based on available API keys
