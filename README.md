@@ -38,7 +38,6 @@
 | Gemini     | ✅   | ✅        | ✅           | ❌         | ❌        | ❌               |
 | DeepSeek   | ✅   | ✅        | ✅           | ❌         | ❌        | ❌               |
 
-
 ## Installation
 
 ```bash
@@ -83,6 +82,11 @@ const stream = await abso.chat.stream({
 for await (const chunk of stream) {
   console.log(chunk)
 }
+
+// Helper to get the final result
+const fullResult = await stream.finalChatCompletion()
+
+console.log(fullResult)
 ```
 
 ## Embeddings
@@ -121,6 +125,14 @@ const result = await abso.chat.create({
   messages: [{ role: "user", content: "Hello!" }],
 })
 ```
+
+## Observability
+
+You can use Abso with [Lunary](https://lunary.ai) to get observability into your LLM usage.
+
+First signup to [Lunary](https://lunary.ai) and get your public key.
+
+Then simply set the `LUNARY_PUBLIC_KEY` environment variable to your public key to enable observability.
 
 ## Ollama
 
