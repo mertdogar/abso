@@ -13,6 +13,7 @@ import { OllamaProvider } from "./providers/ollama"
 import { VoyageProvider } from "./providers/voyage"
 import { GeminiProvider } from "./providers/gemini"
 import { DeepSeekProvider } from "./providers/deepseek"
+import { PerplexityProvider } from "./providers/perplexity"
 
 import { LunaryCallback } from "./callbacks/lunary"
 
@@ -27,6 +28,7 @@ const providerConfigs = [
   { key: "VOYAGE_API_KEY", Provider: VoyageProvider },
   { key: "GEMINI_API_KEY", Provider: GeminiProvider },
   { key: "DEEPSEEK_API_KEY", Provider: DeepSeekProvider },
+  { key: "PERPLEXITY_API_KEY", Provider: PerplexityProvider },
 ] as const
 
 // Initialize providers based on available API keys
