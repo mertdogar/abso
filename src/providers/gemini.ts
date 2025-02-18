@@ -4,52 +4,54 @@ import type {
   ChatCompletion,
   ProviderChatCompletionStream,
   ChatCompletionChunk,
-} from "../types";
+} from "../types"
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
 interface GeminiProviderOptions {
-  apiKey?: string;
-  baseURL?: string;
-  timeout?: number;
+  apiKey?: string
+  baseURL?: string
+  timeout?: number
 }
 
 export class GeminiProvider implements IProvider {
-  public name = "gemini";
-  private options: GeminiProviderOptions;
-  private apiKey: string;
-  private genAI: GoogleGenerativeAI;
+  public name = "gemini"
+  private genAI: GoogleGenerativeAI | undefined
 
   constructor(options: GeminiProviderOptions = {}) {
-    this.options = options;
-    const apiKey = this.options.apiKey ?? process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    const apiKey = options.apiKey || process.env.GEMINI_API_KEY
+    if (apiKey) {
+      if (options.baseURL) {
+        console.warn("The 'baseURL' option is ignored by Gemini")
+      }
+      this.genAI = new GoogleGenerativeAI(apiKey)
+    }
+  }
+
+  validateConfig(): void {
+    if (!this.genAI) {
       throw new Error(
-        "Gemini API key is required, define GEMINI_API_KEY in your environment or pass it in options"
-      );
+        "Gemini API key is required. Set GEMINI_API_KEY environment variable or pass it in constructor options."
+      )
     }
-    this.apiKey = apiKey;
-    if (this.options.baseURL) {
-      console.warn("The 'baseURL' option is ignored by Gemini");
-    }
-    this.genAI = new GoogleGenerativeAI(this.apiKey);
   }
 
   matchesModel(model: string): boolean {
-    return model.toLowerCase().startsWith("gemini");
+    return model.toLowerCase().startsWith("gemini")
   }
 
   async createCompletion(
     request: ChatCompletionCreateParams
   ): Promise<ChatCompletion> {
+    this.validateConfig()
     // Force stream to false
-    const req = { ...request, stream: false };
+    const req = { ...request, stream: false }
     const responseMimeType =
       request.response_format?.type === "json_object"
         ? "application/json"
-        : undefined;
+        : undefined
     const stopSequences =
-      typeof request.stop === "string" ? [request.stop] : request.stop;
+      typeof request.stop === "string" ? [request.stop] : request.stop
 
     const generationConfig = {
       maxOutputTokens: request.max_tokens ?? undefined,
@@ -58,38 +60,39 @@ export class GeminiProvider implements IProvider {
       stopSequences: stopSequences ?? undefined,
       candidateCount: request.n ?? undefined,
       responseMimeType,
-    };
-    const modelInstance = this.genAI.getGenerativeModel({
+    }
+    const modelInstance = this.genAI!.getGenerativeModel({
       model: request.model,
       generationConfig,
-    });
+    })
 
     const { contents, systemInstruction } = await convertMessagesToContents(
       req.messages
-    );
+    )
     const params = {
       contents,
       systemInstruction,
       tools: [], // tools not supported for now
       toolConfig: { functionCallingConfig: {} },
-    };
-    const timestamp = Date.now();
+    }
+    const timestamp = Date.now()
 
-    const result = await modelInstance.generateContent(params);
-    return convertResponse(result, request.model, timestamp);
+    const result = await modelInstance.generateContent(params)
+    return convertResponse(result, request.model, timestamp)
   }
 
   async createCompletionStream(
     request: ChatCompletionCreateParams
   ): Promise<ProviderChatCompletionStream> {
+    this.validateConfig()
     // Force stream to true
-    const req = { ...request, stream: true };
+    const req = { ...request, stream: true }
     const responseMimeType =
       request.response_format?.type === "json_object"
         ? "application/json"
-        : undefined;
+        : undefined
     const stopSequences =
-      typeof request.stop === "string" ? [request.stop] : request.stop;
+      typeof request.stop === "string" ? [request.stop] : request.stop
 
     const generationConfig = {
       maxOutputTokens: request.max_tokens ?? undefined,
@@ -98,32 +101,32 @@ export class GeminiProvider implements IProvider {
       stopSequences: stopSequences ?? undefined,
       candidateCount: request.n ?? undefined,
       responseMimeType,
-    };
-    const modelInstance = this.genAI.getGenerativeModel({
+    }
+    const modelInstance = this.genAI!.getGenerativeModel({
       model: request.model,
       generationConfig,
-    });
+    })
 
     const { contents, systemInstruction } = await convertMessagesToContents(
       req.messages
-    );
+    )
     const params = {
       contents,
       systemInstruction,
       tools: [],
       toolConfig: { functionCallingConfig: {} },
-    };
-    const timestamp = Date.now();
+    }
+    const timestamp = Date.now()
 
-    const streamResult = await modelInstance.generateContentStream(params);
+    const streamResult = await modelInstance.generateContentStream(params)
     async function* convertStreamResponse(
       stream: AsyncGenerator<any>,
       model: string,
       timestamp: number
     ): AsyncGenerator<ChatCompletionChunk, void, unknown> {
-      let chunkIndex = 0;
+      let chunkIndex = 0
       for await (const chunk of stream) {
-        const text = chunk.text();
+        const text = chunk.text()
         yield {
           id: `chunk-${chunkIndex++}`,
           object: "chat.completion.chunk",
@@ -140,7 +143,7 @@ export class GeminiProvider implements IProvider {
               finish_reason: chunk.finishReason ?? null,
             },
           ],
-        } as ChatCompletionChunk;
+        } as ChatCompletionChunk
       }
     }
     return {
@@ -151,7 +154,7 @@ export class GeminiProvider implements IProvider {
           request.model,
           timestamp
         ) as unknown as AsyncIterator<ChatCompletionChunk, any, any>,
-    };
+    }
   }
 }
 
@@ -159,22 +162,22 @@ export class GeminiProvider implements IProvider {
 async function convertMessagesToContents(
   messages: any
 ): Promise<{ contents: any[]; systemInstruction: any | undefined }> {
-  let systemInstruction = undefined;
-  const contents = [];
-  let msgs = messages;
+  let systemInstruction = undefined
+  const contents = []
+  let msgs = messages
   if (msgs.length > 0 && msgs[0].role === "system") {
-    const sys = msgs[0];
+    const sys = msgs[0]
     systemInstruction = {
       role: "user",
       parts: [{ text: `System:\n${sys.content || ""}` }],
-    };
-    msgs = msgs.slice(1);
+    }
+    msgs = msgs.slice(1)
   }
   for (const msg of msgs) {
-    const prefix = msg.role === "system" ? "System:\n" : "";
-    contents.push({ role: "user", parts: [{ text: prefix + msg.content }] });
+    const prefix = msg.role === "system" ? "System:\n" : ""
+    contents.push({ role: "user", parts: [{ text: prefix + msg.content }] })
   }
-  return { contents, systemInstruction };
+  return { contents, systemInstruction }
 }
 
 // Helper function to convert Gemini response to ChatCompletion format
@@ -187,12 +190,12 @@ function convertResponse(
     (result.response &&
       result.response.candidates &&
       result.response.candidates[0]) ||
-    {};
+    {}
   const content = candidate.content?.parts
     ? candidate.content.parts.map((part: any) => part.text).join("")
-    : null;
+    : null
   const message = {
-    role: "assistant",
+    role: "assistant" as const,
     content,
     refusal: null,
     tool_calls: candidate.content?.parts
@@ -207,7 +210,7 @@ function convertResponse(
             },
           }))
       : undefined,
-  };
+  }
   return {
     id: "",
     object: "chat.completion",
@@ -228,5 +231,5 @@ function convertResponse(
           total_tokens: result.response.usageMetadata.totalTokenCount,
         }
       : undefined,
-  };
+  }
 }

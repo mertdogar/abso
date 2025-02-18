@@ -8,36 +8,26 @@ interface GroqProviderOptions {
 
 export class GroqProvider extends OpenAIProvider implements IProvider {
   public name = "groq"
+  private apiKey: string | undefined
 
-  constructor(options: GroqProviderOptions) {
+  constructor(options: GroqProviderOptions = {}) {
+    const apiKey = options.apiKey || process.env.GROQ_API_KEY
     super({
-      apiKey: options.apiKey,
+      apiKey,
       baseURL: "https://api.groq.com/openai/v1/",
     })
+    this.apiKey = apiKey
   }
 
-  sanitizeRequest(
-    request: ChatCompletionCreateParams
-  ): ChatCompletionCreateParams {
-    if (request.response_format?.type === "json_object") {
-      if (request.stream) {
-        throw new Error(
-          "OpenRouter does not support streaming when the response_format is json_object"
-        )
-      }
-
-      if (request.stop) {
-        throw new Error(
-          "OpenRouter does not support the stop parameter when response_format is json_object"
-        )
-      }
+  validateConfig(): void {
+    if (!this.apiKey) {
+      throw new Error(
+        "Groq API key is required. Set GROQ_API_KEY environment variable or pass it in constructor options."
+      )
     }
-
-    return request
   }
 
   matchesModel(model: string): boolean {
-    // TODO: Implement this
     return false
   }
 }

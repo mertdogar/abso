@@ -60,6 +60,12 @@ export interface IProvider {
   matchesModel(model: string): boolean
 
   /**
+   * Validates the provider's configuration.
+   * Throws an error if the configuration is invalid.
+   */
+  validateConfig?(): void
+
+  /**
    * Sanitizes a request before it is sent to the provider.
    */
   sanitizeRequest?(
@@ -92,6 +98,7 @@ export interface AbsoCallback {
 }
 
 export interface AbsoOptions {
-  providers: IProvider[]
+  providers?: IProvider[]
   callbacks?: AbsoCallback[]
+  [key: string]: any
 }

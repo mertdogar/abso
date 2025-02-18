@@ -1,6 +1,6 @@
 {
   "name": "abso-ai",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "module": "src/index.ts",
   "description": "Abso AI SDK. Call LLMs using a single API.",
   "type": "module",

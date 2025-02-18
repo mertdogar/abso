@@ -6,7 +6,7 @@ import type {
 } from "../types"
 
 interface VoyageProviderOptions {
-  apiKey: string
+  apiKey?: string
 }
 
 interface VoyageEmbedding {
@@ -26,10 +26,18 @@ interface VoyageEmbeddingResponse {
 
 export class VoyageProvider implements IProvider {
   public name = "voyage"
-  private apiKey: string
+  private apiKey: string | undefined
 
-  constructor(options: VoyageProviderOptions) {
-    this.apiKey = options.apiKey
+  constructor(options: VoyageProviderOptions = {}) {
+    this.apiKey = options.apiKey || process.env.VOYAGE_API_KEY
+  }
+
+  validateConfig(): void {
+    if (!this.apiKey) {
+      throw new Error(
+        "Voyage API key is required. Set VOYAGE_API_KEY environment variable or pass it in constructor options."
+      )
+    }
   }
 
   matchesModel(model: string): boolean {
@@ -39,6 +47,7 @@ export class VoyageProvider implements IProvider {
   async embed(
     request: EmbeddingCreateParams
   ): Promise<CreateEmbeddingResponse> {
+    this.validateConfig()
     const response = await fetch("https://api.voyageai.com/v1/embeddings", {
       method: "POST",
       headers: {

@@ -24,14 +24,23 @@ export class AnthropicProvider implements IProvider {
   public name = "anthropic"
   private client: Anthropic
 
-  constructor(options: AnthropicProviderOptions) {
+  constructor(options: AnthropicProviderOptions = {}) {
+    const apiKey = options.apiKey || process.env.ANTHROPIC_API_KEY
     this.client = new Anthropic({
-      apiKey: options.apiKey,
+      apiKey,
       baseURL: options.baseURL,
       maxRetries: options.maxRetries,
       defaultHeaders: options.defaultHeaders,
       defaultQuery: options.defaultQuery,
     })
+  }
+
+  private validateApiKey() {
+    if (!this.client.apiKey) {
+      throw new Error(
+        "Anthropic API key is required. Set ANTHROPIC_API_KEY environment variable or pass it in constructor options."
+      )
+    }
   }
 
   matchesModel(model: string): boolean {
@@ -163,6 +172,7 @@ export class AnthropicProvider implements IProvider {
   async createCompletion(
     request: ChatCompletionCreateParams
   ): Promise<ChatCompletion> {
+    this.validateApiKey()
     const anthropicRequest = this.convertOpenAIToAnthropic(request)
     const response = await this.client.messages.create({
       ...anthropicRequest,
@@ -174,6 +184,7 @@ export class AnthropicProvider implements IProvider {
   async createCompletionStream(
     request: ChatCompletionCreateParams
   ): Promise<ProviderChatCompletionStream> {
+    this.validateApiKey()
     const anthropicRequest = this.convertOpenAIToAnthropic(request)
     const stream = await this.client.messages.create({
       ...anthropicRequest,

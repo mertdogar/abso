@@ -25,11 +25,12 @@ interface OpenAIProviderOptions {
 export class OpenAIProvider implements IProvider {
   public name = "openai"
 
-  private client: OpenAI
+  protected client: OpenAI
 
-  constructor(options: OpenAIProviderOptions) {
+  constructor(options: OpenAIProviderOptions = {}) {
+    const apiKey = options.apiKey || process.env.OPENAI_API_KEY
     this.client = new OpenAI({
-      apiKey: options.apiKey,
+      apiKey,
       baseURL: options.baseURL,
       organization: options.organization,
       timeout: options.timeout,
@@ -39,6 +40,14 @@ export class OpenAIProvider implements IProvider {
       defaultHeaders: options.defaultHeaders,
       defaultQuery: options.defaultQuery,
     })
+  }
+
+  validateConfig(): void {
+    if (!this.client.apiKey) {
+      throw new Error(
+        "OpenAI API key is required. Set OPENAI_API_KEY environment variable or pass it in constructor options."
+      )
+    }
   }
 
   matchesModel(model: string): boolean {
@@ -55,6 +64,7 @@ export class OpenAIProvider implements IProvider {
   async createCompletion(
     request: ChatCompletionCreateParams
   ): Promise<ChatCompletion> {
+    this.validateConfig()
     // Force `stream = false`
     const response = await this.client.chat.completions.create({
       ...request,
@@ -69,6 +79,7 @@ export class OpenAIProvider implements IProvider {
   async createCompletionStream(
     request: ChatCompletionCreateParams
   ): Promise<ProviderChatCompletionStream> {
+    this.validateConfig()
     const stream = await this.client.chat.completions.create({
       ...request,
       stream: true,
@@ -86,6 +97,7 @@ export class OpenAIProvider implements IProvider {
   async embed(
     request: EmbeddingCreateParams
   ): Promise<CreateEmbeddingResponse> {
+    this.validateConfig()
     return this.client.embeddings.create(request)
   }
 }

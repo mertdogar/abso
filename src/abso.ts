@@ -8,8 +8,20 @@ import type {
   AbsoOptions,
   CompletionUsage,
 } from "./types"
+import { LunaryCallback } from "./callbacks/lunary"
 import { findMatchingProvider } from "./utils/modelRouting"
 import type { IProvider } from "./types"
+import { OpenAIProvider } from "./providers/openai"
+import { GroqProvider } from "./providers/groq"
+import { AnthropicProvider } from "./providers/anthropic"
+import { OpenRouterProvider } from "./providers/openrouter"
+import { MistralProvider } from "./providers/mistral"
+import { XaiProvider } from "./providers/xai"
+import { VoyageProvider } from "./providers/voyage"
+import { GeminiProvider } from "./providers/gemini"
+import { DeepSeekProvider } from "./providers/deepseek"
+import { PerplexityProvider } from "./providers/perplexity"
+import { OllamaProvider } from "./providers/ollama"
 
 /**
  * Interface for managing multiple AI providers (like OpenAI, Anthropic, etc.)
@@ -23,9 +35,28 @@ export class Abso {
    * Creates a new Abso instance with the given providers
    * @param options - An object containing the providers and optional callbacks
    */
-  constructor(options: AbsoOptions) {
-    this.providers = options.providers
-    this.callbacks = options.callbacks || []
+  constructor(options: AbsoOptions = {}) {
+    this.callbacks = [
+      ...(process.env.LUNARY_PUBLIC_KEY ? [new LunaryCallback()] : []),
+      ...(options.callbacks || []),
+    ]
+
+    // Load all providers by default, regardless of API key availability
+    // API key validation will happen when the provider is actually used
+
+    this.providers = options.providers || [
+      new OpenAIProvider(options.openai || {}),
+      new GroqProvider(options.groq || {}),
+      new AnthropicProvider(options.anthropic || {}),
+      new OpenRouterProvider(options.openrouter || {}),
+      new MistralProvider(options.mistral || {}),
+      new XaiProvider(options.xai || {}),
+      new VoyageProvider(options.voyage || {}),
+      new GeminiProvider(options.gemini || {}),
+      new DeepSeekProvider(options.deepseek || {}),
+      new PerplexityProvider(options.perplexity || {}),
+      new OllamaProvider(options.ollama || {}),
+    ]
   }
 
   /**
@@ -49,23 +80,37 @@ export class Abso {
       throw new Error(`Must provide a "model" field in the request`)
     }
 
+    let provider: IProvider | undefined
+
     // If user explicitly selected a provider by name
     if (request.provider) {
-      const found = this.providers.find((p) => p.name === request.provider)
-      if (!found) {
+      provider = this.providers.find(
+        (p) => p.name.toLowerCase() === request.provider?.toLowerCase()
+      )
+
+      if (!provider) {
         throw new Error(
-          `Provider "${request.provider}" not found among registered providers`
+          `Provider "${
+            request.provider
+          }" not found among registered providers. Available: ${this.providers
+            .map((p) => p.name)
+            .join(", ")}`
         )
       }
-      return found
     }
 
     // Otherwise use model-based matching
-    const found = findMatchingProvider(request.model, this.providers)
-    if (!found) {
+    provider = findMatchingProvider(request.model, this.providers)
+    if (!provider) {
       throw new Error(`No provider found matching model: "${request.model}"`)
     }
-    return found
+
+    // Validate provider configuration before using it
+    if (provider.validateConfig) {
+      provider.validateConfig()
+    }
+
+    return provider
   }
 
   /**
@@ -87,6 +132,37 @@ export class Abso {
       request: ChatCompletionCreateParams
     ): Promise<ChatCompletionStream> => {
       return this.streamChat(request)
+    },
+    completions: {
+      create: <T extends ChatCompletionCreateParams>(
+        request: T
+      ): Promise<
+        T extends { stream: true }
+          ? ChatCompletionStream
+          : T extends { stream: false }
+          ? ChatCompletion
+          : ChatCompletion
+      > => {
+        if (request.stream) {
+          return this.streamChat(request) as any
+        }
+        return this.createChat(request) as any
+      },
+    },
+  }
+
+  /**
+   * Beta endpoints following OpenAI's beta API structure
+   */
+  public beta = {
+    chat: {
+      completions: {
+        stream: (
+          request: ChatCompletionCreateParams
+        ): Promise<ChatCompletionStream> => {
+          return this.streamChat(request)
+        },
+      },
     },
   }
 

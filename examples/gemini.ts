@@ -1,7 +1,8 @@
 import { abso } from "../src"
 
 const stream = await abso.chat.stream({
-  model: "gemini-2.0-pro-exp-02-05",
+  model: "gemini-1.5-flash",
+  // provider: "xai",
   messages: [{ role: "user", content: "How are you?" }],
 })
 

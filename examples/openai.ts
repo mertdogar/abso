@@ -1,8 +1,9 @@
 import { abso } from "../src"
 
-const stream = await abso.chat.stream({
+const stream = await abso.chat.completions.create({
   model: "gpt-4o",
   tags: ["test"],
+  stream: true,
   messages: [{ role: "user", content: "Hello! Tell me something fun." }],
 })
 

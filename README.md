@@ -4,7 +4,7 @@
   <img src="https://github.com/user-attachments/assets/cfec6d10-7e1e-4412-bd4b-edb3df45fe99" alt="Abso banner" width=1040 />
 </p>
 
-**TypeScript LLM client**
+**Drop-in replacement for OpenAI**
 
 [![npm version](https://badge.fury.io/js/abso-ai.svg)](https://badge.fury.io/js/abso-ai) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/lunary-ai/abso) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/lunary-ai/abso)
 
@@ -14,12 +14,13 @@
 
 ## Features
 
-- **OpenAI-compatible API 🔁**
+- **OpenAI-compatible API 🔁** (drop in replacement)
+- **Call any LLM provider** (OpenAI, Anthropic, Groq, Ollama, etc.)
 - **Lightweight & Fast ⚡**
 - **Embeddings support 🧮**
 - **Unified tool calling 🛠️**
-- **Tokenizer and cost calculation (soon) 🔢** for accurate token counting and cost estimation
-- **Smart routing (soon)** to the best model for your request
+- **Tokenizer and cost calculation (soon) 🔢**
+- **Smart routing (soon)**
 
 ## Providers
 
@@ -35,8 +36,9 @@
 | Voyage     | ❌   | ❌        | ❌           | ✅         | ❌        | ❌               |
 | Azure      | 🚧   | 🚧        | 🚧           | 🚧         | ❌        | 🚧               |
 | Bedrock    | 🚧   | 🚧        | 🚧           | 🚧         | ❌        | 🚧               |
-| Gemini     | ✅   | ✅        | ✅           | ❌         | ❌        | ❌               |
-| DeepSeek   | ✅   | ✅        | ✅           | ❌         | ❌        | ❌               |
+| Gemini     | ✅   | ✅        | ✅           | ❌         | 🚧        | ❌               |
+| DeepSeek   | ✅   | ✅        | ✅           | ❌         | 🚧        | ❌               |
+| Perplexity | ✅   | ✅        | ❌           | ❌         | 🚧        | ❌               |
 
 ## Installation
 
@@ -49,7 +51,7 @@ npm install abso-ai
 ```ts
 import { abso } from "abso-ai"
 
-const result = await abso.chat.create({
+const result = await abso.chat.completions.create({
   messages: [{ role: "user", content: "Say this is a test" }],
   model: "gpt-4o",
 })
@@ -59,10 +61,10 @@ console.log(result.choices[0].message.content)
 
 ## Manually selecting a provider
 
-Abso tries to infer the best provider for a given model, but you can also manually select a provider.
+Abso tries to infer the correct provider for a given model, but you can also manually select a provider.
 
 ```ts
-const result = await abso.chat.create({
+const result = await abso.chat.completions.create({
   messages: [{ role: "user", content: "Say this is a test" }],
   model: "openai/gpt-4o",
   provider: "openrouter",
@@ -74,9 +76,10 @@ console.log(result.choices[0].message.content)
 ## Streaming
 
 ```ts
-const stream = await abso.chat.stream({
+const stream = await abso.chat.completions.create({
   messages: [{ role: "user", content: "Say this is a test" }],
   model: "gpt-4o",
+  stream: true,
 })
 
 for await (const chunk of stream) {
@@ -103,7 +106,7 @@ console.log(embeddings.data[0].embedding)
 ## Tokenizers (soon)
 
 ```ts
-const tokens = await abso.tokenize({
+const tokens = await abso.chat.tokenize({
   messages: [{ role: "user", content: "Hello, world!" }],
   model: "gpt-4o",
 })
@@ -113,40 +116,34 @@ console.log(`${tokens.count} tokens`)
 
 ## Custom Providers
 
+You can also configure built-in providers directly by passing a configuration object with provider names as keys when instantiating Abso:
+
 ```ts
-import { Abso } from "abso"
-import { MyCustomProvider } from "./myCustomProvider"
+import { Abso } from "abso-ai"
 
-const abso = new Abso([])
-abso.registerProvider(new MyCustomProvider(/* config */))
-
-const result = await abso.chat.create({
-  model: "my-custom-model",
-  messages: [{ role: "user", content: "Hello!" }],
+const abso = new Abso({
+  openai: { apiKey: "your-openai-key" },
+  anthropic: { apiKey: "your-anthropic-key" },
+  // add other providers as needed
 })
-```
 
-## Observability
-
-You can use Abso with [Lunary](https://lunary.ai) to get observability into your LLM usage.
-
-First signup to [Lunary](https://lunary.ai) and get your public key.
-
-Then simply set the `LUNARY_PUBLIC_KEY` environment variable to your public key to enable observability.
-
-## Ollama
-
-```ts
-import { abso } from "abso-ai"
-
-const result = await abso.chat.create({
-  messages: [{ role: "user", content: "Hi, what's up?" }],
-  model: "llama3.2",
-  provider: "ollama",
+const result = await abso.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
 })
 
 console.log(result.choices[0].message.content)
 ```
+
+Alternatively, you can also change the providers that are loaded by passing a custom `providers` array to the constructor.
+
+## Observability
+
+You can use Abso with [Lunary](https://lunary.ai) to get instant observability into your LLM usage.
+
+First signup to [Lunary](https://lunary.ai) and get your public key.
+
+Then simply set the `LUNARY_PUBLIC_KEY` environment variable to your public key to enable observability.
 
 ## Contributing
 

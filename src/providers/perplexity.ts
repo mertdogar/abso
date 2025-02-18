@@ -7,12 +7,23 @@ interface PerplexityProviderOptions {
 
 export class PerplexityProvider extends OpenAIProvider implements IProvider {
   public name = "perplexity"
+  private apiKey: string | undefined
 
-  constructor(options: PerplexityProviderOptions) {
+  constructor(options: PerplexityProviderOptions = {}) {
+    const apiKey = options.apiKey || process.env.PERPLEXITY_API_KEY
     super({
-      apiKey: options.apiKey,
+      apiKey,
       baseURL: "https://api.perplexity.ai",
     })
+    this.apiKey = apiKey
+  }
+
+  validateConfig(): void {
+    if (!this.apiKey) {
+      throw new Error(
+        "Perplexity API key is required. Set PERPLEXITY_API_KEY environment variable or pass it in constructor options."
+      )
+    }
   }
 
   sanitizeRequest(
