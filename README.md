@@ -95,7 +95,7 @@ console.log(fullResult)
 ## Embeddings
 
 ```ts
-const embeddings = await abso.embed({
+const embeddings = await abso.embeddings.create({
   model: "text-embedding-3-small",
   input: ["A cat was playing with a ball on the floor"],
 })

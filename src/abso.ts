@@ -227,11 +227,26 @@ export class Abso {
   }
 
   /**
+   * Convenience object for embeddings-related methods
+   */
+  public embeddings = {
+    /**
+     * Creates embeddings for the input text
+     * @param request - The embedding request
+     */
+    create: (
+      request: EmbeddingCreateParams
+    ): Promise<CreateEmbeddingResponse> => {
+      return this.embed(request)
+    },
+  }
+
+  /**
    * Creates embeddings for the input text
    * @param request - The embedding request
    * @throws Error if the provider doesn't support embeddings
    */
-  async embed(
+  private async embed(
     request: EmbeddingCreateParams
   ): Promise<CreateEmbeddingResponse> {
     const provider = this.getProviderForRequest(request)
