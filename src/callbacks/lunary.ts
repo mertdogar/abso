@@ -46,8 +46,6 @@ export class LunaryCallback implements AbsoCallback {
   }
 
   onChatStart(id: string, request: ChatCompletionCreateParams) {
-    console.log("onChatStart request", id, request)
-
     const rawParams: Record<string, unknown> = {}
 
     for (const param of PARAMS_TO_CAPTURE) {
@@ -72,8 +70,6 @@ export class LunaryCallback implements AbsoCallback {
   }
 
   onChatEnd(id: string, result: ChatCompletion) {
-    console.log("onChatEnd result", id, result)
-
     lunary.trackEvent("llm", "end", {
       runId: id,
       model: result.model,
@@ -87,8 +83,6 @@ export class LunaryCallback implements AbsoCallback {
   }
 
   onChatError(id: string, error: Error) {
-    console.log("onChatError error", id, error)
-
     lunary.trackEvent("llm", "error", {
       runId: id,
       error: {
