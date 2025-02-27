@@ -24,7 +24,8 @@ type EmbeddingCreateParams = OriginalEmbeddingCreateParams & {
   provider?: string
 }
 
-// Export our types
+// Update exports to use our extended type
+
 export type {
   ChatCompletion,
   ChatCompletionChunk,
@@ -101,5 +102,3 @@ export interface AbsoOptions {
   callbacks?: AbsoCallback[]
   [key: string]: any
 }
-
-// No need for module.exports as we're using export statements

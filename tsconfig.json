@@ -2,18 +2,17 @@
   "compilerOptions": {
     // Enable latest features
     "lib": ["ESNext", "DOM"],
-    "target": "ES2020",
-    "module": "CommonJS",
+    "target": "ESNext",
+    "module": "ESNext",
     "moduleDetection": "force",
     "allowJs": true,
     "outDir": "./dist",
 
     // Bundler mode
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": false,
+    "verbatimModuleSyntax": true,
     "noEmit": true,
-    "esModuleInterop": true,
 
     // Best practices
     "strict": true,
