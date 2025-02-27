@@ -99,8 +99,14 @@ export class AnthropicProvider implements IProvider {
     let tool_choice:
       | { type: "tool" | "auto"; name: string }
       | { type: "auto" }
+      | { type: "any" }
       | undefined
-    if (request.function_call === "auto" || request.tool_choice === "auto") {
+    if (request.tool_choice === "required") {
+      tool_choice = { type: "any" }
+    } else if (
+      request.function_call === "auto" ||
+      request.tool_choice === "auto"
+    ) {
       tool_choice = { type: "auto" }
     } else if (request.function_call === "none") {
       tool_choice = undefined
