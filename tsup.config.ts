@@ -1,4 +1,4 @@
-import { defineConfig } from "tsup";
+import { defineConfig } from "tsup"
 
 // Split in two folders, otherwise because of bundle: false it will pick the wrong file during require
 export default defineConfig({
@@ -6,7 +6,7 @@ export default defineConfig({
   format: ["cjs", "esm"],
   bundle: true,
   outDir: "dist",
-  splitting: true,
+  splitting: false,
   dts: true,
   sourcemap: false,
   cjsInterop: true,
@@ -14,4 +14,5 @@ export default defineConfig({
   minifyIdentifiers: false,
   minify: false,
   clean: true,
-});
+  treeshake: true,
+})

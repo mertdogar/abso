@@ -1,7 +1,13 @@
-import { Abso } from "./abso"
+const { Abso } = require("./abso")
 
-export const abso = new Abso()
+const abso = new Abso()
 
-export * from "./abso"
-export * from "./types"
-export * from "./providers/openai"
+module.exports = {
+  abso,
+  ...require("./abso"),
+  ...require("./types"),
+  ...require("./providers/openai"),
+}
+
+// For backwards compatibility with ESM
+module.exports.default = module.exports
